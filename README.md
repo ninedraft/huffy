@@ -1,4 +1,5 @@
 # huffy
+[![Go Report Card](https://goreportcard.com/badge/github.com/ninedraft/huffy)](https://goreportcard.com/report/github.com/ninedraft/huffy) [![GoDoc](https://godoc.org/github.com/ninedraft/huffy?status.svg)](https://godoc.org/github.com/ninedraft/huffy)
 
 Huffy is a small library for unit testing in symbiosis with test data generators. It allows you to remember the test arguments that caused the fail test. At the next test run, these arguments will be used first.
 
