@@ -7,10 +7,13 @@ import (
 	"time"
 )
 
+// Generator produces testdata for unit test
 type Generator func(int) interface{}
 
+// Unit represents unit test. Must not call t.Parallel()!
 type Unit func(*testing.T, interface{})
 
+// Tester tries to to find generated test cases, which cause failed tests and write correpsonding test data to Tester.TestFile
 type Tester struct {
 	N         int
 	TestFile  string
@@ -33,6 +36,11 @@ func (tester *Tester) init(test *testing.T) {
 	}
 }
 
+// R runs memorized tests, when runs at most N tests with generated test args.
+// If tester.TestFile is "", then uses default value "testdata/TESTNAME.json"
+// If Tester.N <= 0, then uses default value 400.
+// If Tester.Rnd is nil, then uses random generator initialized with time.Now().UnixNano().
+// If any test fails, then Tester.R writes corresponding arg to tester.TestFile
 func (tester Tester) R(test *testing.T) {
 	tester.init(test)
 	tester.runMemorizedTests(test)
@@ -45,6 +53,8 @@ func (tester *Tester) unitTest(data interface{}) func(*testing.T) {
 	}
 }
 
+// TestCase is a storable data object, which plays role of container for generated test cases.
+// Tester encoded
 type TestCase struct {
 	ID   int64       `json:"id"`
 	Data interface{} `json:"data"`
