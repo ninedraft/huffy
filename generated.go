@@ -20,7 +20,7 @@ func (tester *Tester) runGeneratedTests(test *testing.T) {
 	}()
 	var encoder = json.NewEncoder(testdata)
 	for i := range r(tester.N) {
-		var arg = tester.Generator(i)
+		var arg = tester.Generator(tester.Rnd, i)
 		var id = tester.Rnd.Int63()
 		if !test.Run(fmt.Sprintf("%d", id), tester.unitTest(arg)) {
 			if err := encoder.Encode(TestCase{ID: id, Data: arg}); err != nil {

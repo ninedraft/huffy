@@ -8,7 +8,7 @@ import (
 )
 
 // Generator produces testdata for unit test
-type Generator func(int) interface{}
+type Generator func(*rand.Rand, int) interface{}
 
 // Unit represents unit test. Must not call t.Parallel()!
 type Unit func(*testing.T, interface{})

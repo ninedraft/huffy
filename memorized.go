@@ -18,7 +18,7 @@ func (tester *Tester) runMemorizedTests(test *testing.T) {
 	defer testdata.Close()
 
 	var decoder = json.NewDecoder(testdata)
-	var newArg, elem = unitTestArgFactory(tester.Generator(0))
+	var newArg, elem = unitTestArgFactory(tester.Generator(tester.Rnd, 0))
 
 	for decoder.More() {
 		var tc = TestCase{
