@@ -8,29 +8,43 @@ import (
 )
 
 func (tester *Tester) runMemorizedTests(test *testing.T) {
-	var caseFile, errOpen = os.Open(tester.CaseFile)
-	if errOpen != nil && !os.IsNotExist(errOpen) {
-		test.Fatalf("[huffy.Tester.runMemorizedTests] unable to open case file %q: %v", tester.CaseFile, errOpen)
+	var testdata, errOpen = os.Open(tester.TestFile)
+	switch {
+	case os.IsNotExist(errOpen):
+		return
+	case errOpen != nil:
+		test.Fatalf("unable to run memorized tests: %v", errOpen)
 	}
-	defer caseFile.Close()
-	var decoder = json.NewDecoder(caseFile)
-	var _, testCaseExample = tester.Generator(0)
-	var newTestCase = testCaseFactory(testCaseExample)
+	defer testdata.Close()
+
+	var decoder = json.NewDecoder(testdata)
+	var newArg, elem = unitTestArgFactory(tester.Generator(0))
+
 	for decoder.More() {
-		var testCase = newTestCase()
-		if err := decoder.Decode(&testCase); err != nil {
-			test.Fatalf("[huffy.Tester.runMemorizedTests] unable to decode test case: %v", err)
+		var tc = TestCase{
+			Data: newArg(),
 		}
-		var data = reflect.ValueOf(testCase.Data).Elem().Interface()
-		test.Run(testCase.Name, tester.unitTest(data))
+		if err := decoder.Decode(&tc); err != nil {
+			test.Fatalf("unable to run memorized tests: %v", errOpen)
+		}
+		tester.Unit(test, elem(tc.Data))
 	}
 }
 
-func testCaseFactory(example interface{}) func() TestCase {
-	var tt = reflect.TypeOf(example)
-	return func() TestCase {
-		return TestCase{
-			Data: reflect.New(tt).Interface(),
-		}
+type newArgFactory func() interface{}
+
+type elem func(interface{}) interface{}
+
+func unitTestArgFactory(paragon interface{}) (newArgFactory, elem) {
+	var tt = reflect.TypeOf(paragon)
+	var elem = func(v interface{}) interface{} {
+		return reflect.ValueOf(v).Elem().Interface()
 	}
+	if tt.Kind() == reflect.Ptr {
+		tt = tt.Elem()
+		elem = func(v interface{}) interface{} { return v }
+	}
+	return func() interface{} {
+		return reflect.New(tt).Interface()
+	}, elem
 }
