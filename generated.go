@@ -3,35 +3,28 @@ package huffy
 import (
 	"encoding/json"
 	"fmt"
+	"log"
 	"os"
 	"testing"
 )
 
 func (tester *Tester) runGeneratedTests(test *testing.T) {
-	var caseFile, errOpen = os.OpenFile(tester.CaseFile, os.O_WRONLY|os.O_CREATE|os.O_APPEND, os.ModePerm)
+	var testdata, errOpen = os.OpenFile(tester.TestFile, os.O_WRONLY|os.O_APPEND|os.O_CREATE, os.ModePerm)
 	if errOpen != nil {
-		test.Fatalf("[huffy.Tester.runGeneratedTests] unable to open case file %q: %v", tester.CaseFile, errOpen)
+		test.Fatalf("unable to run generated tests: unable to open testdata file: %v", errOpen)
 	}
-	defer caseFile.Close()
-	var encoder = json.NewEncoder(caseFile)
+	defer func() {
+		if err := testdata.Close(); err != nil {
+			test.Fatalf("unable to run generated tests: unable to close testdata file: %v", err)
+		}
+	}()
+	var encoder = json.NewEncoder(testdata)
 	for i := range r(tester.N) {
-		var name, tcase = tester.Generator(i)
-		if tcase == nil {
-			break
-		}
-		if name == "" {
-			name = fmt.Sprintf("%d", i)
-		}
-		var ok = test.Run(name, func(test *testing.T) {
-			tester.Unit(test, tcase)
-		})
-		if !ok {
-			if err := encoder.Encode(TestCase{
-				ID:   tester.Rnd.Int63(),
-				Name: name,
-				Data: tcase,
-			}); err != nil {
-				test.Fatalf("[huffy.Tester.runGeneratedTests] unable to encode test case %v", err)
+		var arg = tester.Generator(tester.Rnd, i)
+		var id = tester.Rnd.Int63()
+		if !test.Run(fmt.Sprintf("%d", id), tester.unitTest(arg)) {
+			if err := encoder.Encode(TestCase{ID: id, Data: arg}); err != nil {
+				log.Fatalf("unable to run generated tests: unable to write testdata to file: %v", err)
 			}
 		}
 	}

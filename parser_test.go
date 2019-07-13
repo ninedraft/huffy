@@ -39,14 +39,14 @@ func TestParser(test *testing.T) {
 	}
 	var wordParts = strings.Fields(`Decode reads the next json encoded value from its input and stores it in the value pointed to by v`)
 	(&Tester{
-		Generator: func(i int) (name string, data interface{}) {
+		Generator: func(rnd *rand.Rand, i int) interface{} {
 			var n = len(wordParts)
 			var tokens []string
 			for range r(i%5 + 1) {
-				var word = wordParts[rand.Intn(n)]
+				var word = wordParts[rnd.Intn(n)]
 				tokens = append(tokens, strings.Title(word))
 			}
-			return strings.Join(tokens, "_"), TCase{
+			return TCase{
 				Input:    strings.Join(tokens, ""),
 				Expected: tokens,
 			}
